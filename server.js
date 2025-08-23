@@ -20,6 +20,12 @@ const EXOTEL_TOKEN = process.env.EXOTEL_TOKEN;
 const EXOTEL_SUBDOMAIN = process.env.EXOTEL_SUBDOMAIN;
 const FROM_NUMBER = process.env.FROM_NUMBER; // Your Exotel virtual number
 
+// Check if Exotel credentials are configured
+const isExotelConfigured = EXOTEL_SID && EXOTEL_TOKEN && FROM_NUMBER && 
+  EXOTEL_SID !== 'your_exotel_sid_here' && 
+  EXOTEL_TOKEN !== 'your_exotel_token_here' && 
+  FROM_NUMBER !== 'your_exotel_virtual_number';
+
 // Generate QR code for a phone number
 app.post('/generate-qr', async (req, res) => {
   try {
@@ -27,6 +33,11 @@ app.post('/generate-qr', async (req, res) => {
     
     if (!phoneNumber) {
       return res.status(400).json({ error: 'Phone number is required' });
+    }
+    
+    // Validate phone number format (basic validation)
+    if (!/^\+?[\d\s\-\(\)]+$/.test(phoneNumber)) {
+      return res.status(400).json({ error: 'Invalid phone number format' });
     }
     
     // Generate unique call ID
@@ -110,6 +121,20 @@ app.get('/call/:callId', async (req, res) => {
       `);
     }
     
+    // Check if Exotel is configured
+    if (!isExotelConfigured) {
+      return res.send(`
+        <html>
+          <body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+            <h2>⚠️ Demo Mode</h2>
+            <p>Exotel credentials not configured.</p>
+            <p>Would call <strong>${mapping.label}</strong> from <strong>${from}</strong></p>
+            <p><small>Configure your .env file to enable actual calling</small></p>
+          </body>
+        </html>
+      `);
+    }
+    
     // Initiate call via Exotel
     const callResult = await initiateExotelCall(from, mapping.phoneNumber);
     
@@ -147,12 +172,14 @@ async function initiateExotelCall(fromNumber, toNumber) {
   try {
     const url = `https://${EXOTEL_SID}:${EXOTEL_TOKEN}@api.exotel.com/v1/Accounts/${EXOTEL_SID}/Calls/connect.json`;
     
-    const response = await axios.post(url, {
-      From: fromNumber,
-      To: toNumber,
-      CallerId: FROM_NUMBER,
-      CallType: 'trans'
-    }, {
+    // Create form data for Exotel API
+    const formData = new URLSearchParams();
+    formData.append('From', fromNumber);
+    formData.append('To', toNumber);
+    formData.append('CallerId', FROM_NUMBER);
+    formData.append('CallType', 'trans');
+    
+    const response = await axios.post(url, formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
