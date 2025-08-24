@@ -13,7 +13,14 @@ const isExotelConfigured = EXOTEL_SID && EXOTEL_TOKEN && FROM_NUMBER &&
 
 async function initiateExotelCall(fromNumber, toNumber) {
   try {
-    const url = `https://${EXOTEL_SID}:${EXOTEL_TOKEN}@api.exotel.com/v1/Accounts/${EXOTEL_SID}/Calls/connect.json`;
+    console.log('Exotel Config:', { 
+      SID: EXOTEL_SID ? 'Set' : 'Missing', 
+      TOKEN: EXOTEL_TOKEN ? 'Set' : 'Missing', 
+      FROM: FROM_NUMBER ? FROM_NUMBER : 'Missing' 
+    });
+    
+    // Try the correct Exotel API endpoint format
+    const url = `https://api.exotel.com/v1/Accounts/${EXOTEL_SID}/Calls/connect.json`;
     
     const formData = new URLSearchParams();
     formData.append('From', fromNumber);
@@ -24,6 +31,10 @@ async function initiateExotelCall(fromNumber, toNumber) {
     const response = await axios.post(url, formData, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      auth: {
+        username: EXOTEL_SID,
+        password: EXOTEL_TOKEN
       }
     });
     
@@ -142,6 +153,13 @@ module.exports = async (req, res) => {
       `);
     }
     
+    // Debug: Log environment variables
+    console.log('Environment check:', {
+      EXOTEL_SID: process.env.EXOTEL_SID ? 'Present' : 'Missing',
+      EXOTEL_TOKEN: process.env.EXOTEL_TOKEN ? 'Present' : 'Missing', 
+      FROM_NUMBER: process.env.FROM_NUMBER ? process.env.FROM_NUMBER : 'Missing'
+    });
+    
     // Check if Exotel is configured and make actual call
     if (!isExotelConfigured) {
       return res.status(200).send(`
@@ -179,11 +197,12 @@ module.exports = async (req, res) => {
           </head>
           <body>
             <div class="container">
-              <h2 class="success">✅ Demo Mode - Call Would Work!</h2>
+              <h2 class="success">⚠️ Demo Mode - Exotel Not Configured</h2>
               <p>Would call <strong>${mapping.label}</strong></p>
               <p>From: <strong>${from}</strong></p>
               <p>To: <strong>${mapping.phoneNumber}</strong></p>
-              <p><small>Configure Exotel credentials to enable actual calling</small></p>
+              <p><small>Environment variables missing in Vercel deployment</small></p>
+              <p><small>SID: ${EXOTEL_SID ? 'Set' : 'Missing'}, TOKEN: ${EXOTEL_TOKEN ? 'Set' : 'Missing'}, FROM: ${FROM_NUMBER || 'Missing'}</small></p>
               <a href="/" class="btn">← Generate Another QR Code</a>
             </div>
           </body>
