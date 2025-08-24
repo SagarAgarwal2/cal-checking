@@ -45,7 +45,7 @@ async function initiateExotelCall(fromNumber, toNumber) {
   }
 }
 
-module.exports = async function handler(req, res) {
+module.exports = async (req, res) => {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -83,7 +83,7 @@ module.exports = async function handler(req, res) {
       
       // Generate QR code with call ID
       const baseUrl = `https://${req.headers.host}`;
-      const qrData = `${baseUrl}/api?action=call&callId=${newCallId}`;
+      const qrData = `${baseUrl}/api/call?callId=${newCallId}`;
       const qrCodeDataURL = await QRCode.toDataURL(qrData);
       
       return res.json({
