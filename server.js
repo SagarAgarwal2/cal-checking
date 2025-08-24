@@ -211,7 +211,8 @@ app.get('/admin/mappings', (req, res) => {
   res.json(mappings);
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📱 Generate QR codes at http://localhost:${PORT}`);
+  console.log(`📱 Mobile access: Find your computer's IP and use http://YOUR_IP:${PORT}`);
 });

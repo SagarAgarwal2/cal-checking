@@ -48,6 +48,10 @@
         button:hover {
             background: #0056b3;
         }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
         .qr-result {
             margin-top: 30px;
             text-align: center;
@@ -75,6 +79,13 @@
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -106,8 +117,10 @@
                 <input type="text" id="label" placeholder="e.g., Customer Support, John Doe">
             </div>
             
-            <button type="submit">🔗 Generate QR Code</button>
+            <button type="submit" id="generateBtn">🔗 Generate QR Code</button>
         </form>
+
+        <div id="error" class="error" style="display: none;"></div>
 
         <div id="result" class="qr-result" style="display: none;">
             <h3>QR Code Generated!</h3>
@@ -127,6 +140,15 @@
             
             const phoneNumber = document.getElementById('phoneNumber').value;
             const label = document.getElementById('label').value;
+            const generateBtn = document.getElementById('generateBtn');
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            
+            // Reset UI
+            errorDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+            generateBtn.disabled = true;
+            generateBtn.textContent = '⏳ Generating...';
             
             try {
                 const response = await fetch('/api/generate-qr', {
@@ -143,13 +165,19 @@
                     document.getElementById('qrImage').src = data.qrCode;
                     document.getElementById('resultLabel').textContent = data.label || 'No label';
                     document.getElementById('callUrl').textContent = data.callUrl;
-                    document.getElementById('result').style.display = 'block';
+                    resultDiv.style.display = 'block';
                 } else {
-                    alert('Error: ' + data.error);
+                    errorDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    errorDiv.style.display = 'block';
                 }
                 
             } catch (error) {
-                alert('Error generating QR code: ' + error.message);
+                console.error('Error:', error);
+                errorDiv.textContent = 'Error generating QR code: ' + error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🔗 Generate QR Code';
             }
         });
     </script>
