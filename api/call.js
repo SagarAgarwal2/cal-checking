@@ -12,9 +12,23 @@ module.exports = async (req, res) => {
   const { callId, from } = req.query;
   
   try {
-    // Get mapping or create demo one
-    let mapping = callMappings.get(callId);
-    if (!mapping) {
+    // Decode phone number and label from call ID
+    let mapping;
+    try {
+      const parts = callId.split('_');
+      if (parts.length >= 2) {
+        const phoneNumber = Buffer.from(parts[0], 'base64').toString();
+        const label = Buffer.from(parts[1], 'base64').toString();
+        mapping = {
+          phoneNumber,
+          label,
+          createdAt: new Date()
+        };
+      } else {
+        throw new Error('Invalid call ID format');
+      }
+    } catch (decodeError) {
+      // Fallback to demo data if decoding fails
       mapping = {
         phoneNumber: '+1234567890',
         label: 'Demo Contact',

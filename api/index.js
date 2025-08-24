@@ -71,10 +71,12 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Invalid phone number format' });
       }
       
-      // Generate unique call ID
-      const newCallId = 'call_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      // Generate unique call ID with encoded phone number
+      const encodedPhone = Buffer.from(phoneNumber).toString('base64');
+      const encodedLabel = Buffer.from(label || 'Unknown Contact').toString('base64');
+      const newCallId = `${encodedPhone}_${encodedLabel}_${Date.now()}`;
       
-      // Store mapping
+      // Store mapping (though it won't persist in serverless)
       callMappings.set(newCallId, {
         phoneNumber,
         label: label || 'Unknown Contact',
